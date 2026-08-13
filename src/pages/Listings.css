@@ -1,0 +1,85 @@
+.listings-page {
+  padding: 60px 32px 100px;
+}
+
+.listings-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.listings-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.listings-header p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.listings-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+
+.listings-controls input {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--surface);
+}
+
+.listings-controls input[type='text'] {
+  flex: 2;
+  min-width: 220px;
+}
+
+.listings-controls input[type='number'] {
+  flex: 1;
+  min-width: 160px;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.view-toggle button {
+  border: none;
+  background: var(--surface);
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.view-toggle button.active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .listings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .listings-controls {
+    flex-direction: column;
+  }
+}

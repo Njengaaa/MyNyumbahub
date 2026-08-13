@@ -1,0 +1,67 @@
+.add-listing {
+  padding: 50px 32px 100px;
+  max-width: 640px;
+}
+
+.add-listing h1 {
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.add-listing-sub {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 32px;
+}
+
+.add-listing-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.add-listing-form .form-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.add-listing-form input,
+.add-listing-form select,
+.add-listing-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.add-listing-form input:focus,
+.add-listing-form select:focus,
+.add-listing-form textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.add-listing-form .form-field {
+  margin-bottom: 18px;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

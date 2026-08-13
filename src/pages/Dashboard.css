@@ -1,0 +1,119 @@
+.dashboard {
+  padding: 50px 32px 100px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 44px;
+}
+
+.dashboard-header-tenant {
+  background: var(--accent-soft);
+}
+
+.dashboard-header-landlord {
+  background: var(--gold-soft);
+}
+
+.dashboard-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 10px 0 6px;
+}
+
+.dashboard-header p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.dashboard-section {
+  margin-bottom: 44px;
+}
+
+.dashboard-section h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.booking-list,
+.landlord-listing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking-row,
+.landlord-listing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.booking-row-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.booking-row-sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.booking-row-actions,
+.landlord-listing-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.btn-outline.danger {
+  color: var(--danger);
+  border-color: var(--danger-soft);
+}
+
+.btn-outline.danger:hover {
+  border-color: var(--danger);
+}
+
+.status-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.status-confirmed {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.status-cancelled {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
