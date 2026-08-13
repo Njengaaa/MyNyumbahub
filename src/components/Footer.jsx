@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import './Footer.css';
 
@@ -27,7 +28,9 @@ function Footer() {
         </div>
       </div>
 
-      <div className="footer-bottom container">© {new Date().getFullYear()} Nyumbahub</div>
+      <div className="footer-bottom container">
+        © {new Date().getFullYear()} Nyumbahub
+      </div>
     </footer>
   );
 }

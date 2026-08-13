@@ -1,76 +1,135 @@
 .navbar {
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 1000;
+  width: 100%;
 }
 
 .navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  height: 76px;
+  align-items: center;
+  padding: 1rem 2rem;
+  box-sizing: border-box;
 }
 
+/* Logo Styling */
 .navbar-logo {
-  font-family: var(--font-display);
+  font-family: var(--font-display, sans-serif);
+  font-size: 1.5rem;
   font-weight: 800;
-  font-size: 20px;
-  color: var(--ink);
+  color: #0f172a;
   text-decoration: none;
 }
 
 .navbar-logo span {
-  color: var(--accent);
+  color: #237a62; /* Your primary green accent color */
 }
 
+/* Navigation Links Container */
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 1.5rem;
 }
 
+/* Standard Nav Links */
 .navbar-links a {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink-soft);
+  color: #334155;
   text-decoration: none;
-  transition: color 0.15s ease;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
 }
 
 .navbar-links a:hover {
-  color: var(--ink);
+  color: #237a62;
 }
 
-.navbar-cta {
-  padding: 10px 20px;
+/* 🟢 FIX: "Get Started" CTA Button Text Color */
+.navbar-cta,
+a.navbar-cta,
+a.btn-accent {
+  background-color: #237a62 !important;
+  color: #ffffff !important; /* Forces text to white before hover */
+  padding: 0.55rem 1.25rem !important;
+  border-radius: 8px;
+  font-weight: 600 !important;
+  text-decoration: none !alignment;
+  transition: background-color 0.2s ease, transform 0.1s ease !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.navbar-logout {
-  background: none;
-  border: none;
-  font-size: 14px;
+.navbar-cta:hover,
+a.navbar-cta:hover,
+a.btn-accent:hover {
+  background-color: #1b6350 !important; /* Slightly darker shade on hover */
+  color: #ffffff !important; /* Stays white on hover */
+}
+
+/* User Role Badges */
+.badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--ink-soft);
-  padding: 0;
+  text-transform: capitalize;
+}
+
+.badge-landlord {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.badge-tenant {
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+/* Logout Button */
+.navbar-logout {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .navbar-logout:hover {
-  color: var(--danger);
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
-@media (max-width: 720px) {
+/* Mobile Adjustments */
+@media (max-width: 640px) {
   .navbar-inner {
-    height: auto;
-    padding: 16px 20px;
-    flex-direction: column;
-    gap: 14px;
+    padding: 1rem;
   }
-
+  
   .navbar-links {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 16px;
+    gap: 1rem;
   }
+}
+
+/* Ensure the "Get started" CTA text color is always white */
+a.navbar-cta,
+a.btn-accent,
+.navbar-links a.navbar-cta {
+  color: #ffffff !important;
+}
+
+a.navbar-cta:hover,
+a.btn-accent:hover,
+.navbar-links a.navbar-cta:hover {
+  color: #ffffff !important;
 }
