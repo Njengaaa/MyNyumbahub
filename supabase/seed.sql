@@ -1,55 +1,72 @@
--- Sample listings so the site isn't empty on first run.
--- Run this AFTER schema.sql, in the same SQL Editor.
--- landlord_id is left null (these are demo listings, unowned by any account).
-
-insert into public.listings
-  (title, area, city, lat, lng, rent_amount, bedrooms, bathrooms, description, images)
-values
-  (
-    '2 Bedroom Apartment', 'Kilimani', 'Nairobi', -1.2921, 36.7873,
-    45000, 4, 2,
-    'Bright, modern 4-bedroom apartment close to Yaya Centre, with backup water and secure parking.',
-    array[
-      'https://i.roamcdn.net/prop/brk/gallery-full-1200w-watermark/EReBQjwVaxAdlsIni3I3LQ/-_1q4ZkIfdUXd_EZIUAqA8VgvNzSkEJrFipFgA/_1I6ruNDSwsLQwMTACAA/7549160c-558f-4448-9f2c-e601beb29eba.jpeg'
-    ]
-  ),
-  (
-    'Bedsitter near campus', 'Madaraka', 'Nairobi', -1.3095, 36.8172,
-    12000, 1, 1,
-    'Affordable bedsitter, walking distance to campus, ideal for students.',
-    array[
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFwrwtPXqTf6STMzLaqWV6SaMv2k5oR-Ma0YNJpI7XtQ&s=10'
-    ]
-  ),
-  (
-    '3 Bedroom Townhouse', 'Ruaka', 'Kiambu', -1.2129, 36.7815,
-    65000, 3, 3,
-    'Spacious townhouse with a small garden, gated compound, 24hr security.',
-    array[
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStG64r8PxvLoSqVl5WhIIYHKvij4V6bgfCQ9m9Jy3Q7Q&s'
-    ]
-  ),
-  (
-    'Studio Apartment', 'Westlands', 'Nairobi', -1.2673, 36.8062,
-    30000, 1, 1,
-    'Modern studio in a serviced building, close to malls and offices.',
-    array[
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgTnKxNNhNrnw0XMksIhyUVT5wbwjnPai8mYcHFd8tMQ&s=10'
-    ]
-  ),
-  (
-    '4 Bedroom Maisonette', 'Karen', 'Nairobi', -1.3192, 36.7076,
-    120000, 4, 4,
-    'Family maisonette with large compound, DSQ, and mature trees.',
-    array[
-      'https://www.dunhillconsulting.com/wp-content/uploads/2023/05/RFP_1761.jpg'
-    ]
-  ),
-  (
-    '1 Bedroom Apartment', 'Kileleshwa', 'Nairobi', -1.2833, 36.7833,
-    38000, 1, 1,
-    'Cozy 1-bedroom in a quiet, leafy neighbourhood, close to Kileleshwa shops.',
-    array[
-      'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1200'
-    ]
-  );
+INSERT INTO listings (
+  title, 
+  description, 
+  rent_amount, 
+  bedrooms, 
+  bathrooms, 
+  area, 
+  city, 
+  lat, 
+  lng, 
+  images
+) VALUES 
+(
+  'Modern 2 Bedroom Apartment in Kilimani', 
+  'Spacious 2-bedroom apartment with modern finishes, balcony, fast Wi-Fi, and 24/7 security.', 
+  45000, 
+  2, 
+  2, 
+  'Kilimani', 
+  'Nairobi', 
+  -1.2874, 
+  36.7845, 
+  ARRAY['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80']
+),
+(
+  'Luxury Villa with Garden', 
+  'Exclusive 4-bedroom villa featuring private parking, lush garden, and top-tier security.', 
+  120000, 
+  4, 
+  4, 
+  'Karen', 
+  'Nairobi', 
+  -1.3328, 
+  36.7816, 
+  ARRAY['https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80']
+),
+(
+  'Cozy Studio Apartment', 
+  'Affordable and cozy studio unit close to shopping malls and public transport routes.', 
+  22000, 
+  1, 
+  1, 
+  'Roysambu', 
+  'Nairobi', 
+  -1.2208, 
+  36.9012, 
+  ARRAY['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80']
+),
+(
+  'Executive 3 Bed Apartment', 
+  'Charming 3-bedroom unit with master ensuite, gym access, and backup generator.', 
+  65000, 
+  3, 
+  2, 
+  'Westlands', 
+  'Nairobi', 
+  -1.2683, 
+  36.8117, 
+  ARRAY['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80']
+),
+(
+  'Charming 1 Bedroom Haven', 
+  'Fully furnished 1 bedroom apartment ideal for young professionals or students.', 
+  30000, 
+  1, 
+  1, 
+  'Lavington', 
+  'Nairobi', 
+  -1.2789, 
+  36.7722, 
+  ARRAY['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80']
+);
