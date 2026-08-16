@@ -12,12 +12,14 @@ import Register from './pages/Register';
 import TenantDashboard from './pages/TenantDashboard';
 import LandlordDashboard from './pages/LandlordDashboard';
 import AddListing from './pages/AddListing';
+import HousingMap from './pages/HousingMap';
 
 function App() {
   return (
     <AuthProvider>
       <Navbar />
       <Routes>
+        <Route path="/HousingMap" element={<HousingMap />} />
         <Route path="/" element={<Home />} />
         <Route path="/listings" element={<Listings />} />
         <Route path="/listings/:id" element={<ListingDetail />} />

@@ -22,6 +22,7 @@ function Navbar() {
 
         <nav className="navbar-links">
           <Link to="/listings">Listings</Link>
+          <Link to="/HousingMap">Map</Link>
 
           {user ? (
             <>
