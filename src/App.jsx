@@ -13,19 +13,20 @@ import TenantDashboard from './pages/TenantDashboard';
 import LandlordDashboard from './pages/LandlordDashboard';
 import AddListing from './pages/AddListing';
 import HousingMap from './pages/HousingMap';
+import Chatbot from './components/Chatbot';  // ← Keep this import
 
 function App() {
   return (
     <AuthProvider>
       <Navbar />
       <Routes>
-        <Route path="/HousingMap" element={<HousingMap />} />
         <Route path="/" element={<Home />} />
+        {/* Remove this route: <Route path="/MlChatbot" element={<Chatbot/>} /> */}
+        <Route path="/HousingMap" element={<HousingMap />} />
         <Route path="/listings" element={<Listings />} />
         <Route path="/listings/:id" element={<ListingDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
         <Route
           path="/dashboard/tenant"
           element={
@@ -51,6 +52,10 @@ function App() {
           }
         />
       </Routes>
+      
+      {/* CHATBOT WIDGET - Shows on every page */}
+      <Chatbot />  {/* ← Add this here */}
+      
       <Footer />
     </AuthProvider>
   );
