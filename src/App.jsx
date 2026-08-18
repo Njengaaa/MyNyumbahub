@@ -14,7 +14,7 @@ import Register from './pages/Register';
 import TenantDashboard from './pages/TenantDashboard';
 import LandlordDashboard from './pages/LandlordDashboard';
 import AddListing from './pages/AddListing';
-import HousingMap from './';
+import HousingMap from './pages/HousingMap';
 
 function App() {
   return (
