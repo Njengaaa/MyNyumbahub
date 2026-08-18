@@ -1,8 +1,10 @@
+// App.jsx
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import Chatbot from './components/Chatbot';  // ← Import the widget
 
 import Home from './pages/Home';
 import Listings from './pages/Listings';
@@ -12,6 +14,7 @@ import Register from './pages/Register';
 import TenantDashboard from './pages/TenantDashboard';
 import LandlordDashboard from './pages/LandlordDashboard';
 import AddListing from './pages/AddListing';
+import HousingMap from './';
 
 function App() {
   return (
@@ -19,6 +22,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/HousingMap" element={<HousingMap />} />
         <Route path="/listings" element={<Listings />} />
         <Route path="/listings/:id" element={<ListingDetail />} />
         <Route path="/login" element={<Login />} />
@@ -49,6 +53,10 @@ function App() {
           }
         />
       </Routes>
+      
+      {/* ✅ CHATBOT WIDGET - Shows on EVERY page */}
+      <Chatbot />
+      
       <Footer />
     </AuthProvider>
   );
