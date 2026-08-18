@@ -1,4 +1,4 @@
-# Nyumbahub — Redesign
+n# Nyumbahub — Redesign
 
 A modern redesign of the Nyumbahub concept: real login/register (Supabase Auth),
 a real Postgres database (Supabase), role-based Tenant/Landlord dashboards, and

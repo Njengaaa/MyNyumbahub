@@ -4,7 +4,17 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MAP_CENTER, MAP_ZOOM } from '../areaCoords';
 import './ListingsMap.css';
+import { HousingMap } from '../components/HousingMap'
 
+export function Home() {
+    return (
+        <div>
+            <h1 className="text-3xl font-bold mb-6">Nairobi Housing Market</h1>
+            <p className="text-gray-600 mb-6">Explore properties across Nairobi and surrounding areas</p>
+            <HousingMap />
+        </div>
+    )
+}
 // Leaflet's default marker icons don't resolve correctly under Vite's bundler,
 // so we rebuild the icon from the CDN-hosted images.
 const markerIcon = new L.Icon({

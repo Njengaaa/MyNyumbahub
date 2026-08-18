@@ -27,7 +27,6 @@ function App() {
         <Route path="/listings/:id" element={<ListingDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
         <Route
           path="/dashboard/tenant"
           element={
