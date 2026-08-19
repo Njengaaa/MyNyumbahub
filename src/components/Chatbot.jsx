@@ -9,28 +9,49 @@ const ChatbotWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // API URL - change this to your deployed API URL later
-  const API_URL = import.meta.env.VITE_API_URL || 'https://chatbot-1-2g9x.onrender.com';
-
-  // Welcome message when chat opens
-  useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      setMessages([
-        {
-          id: 'welcome',
-          sender: 'bot',
-          text: "🏠 Hi! I'm your NyumbaHub assistant.\n\nI can help you:\n• Find houses in your budget\n• Suggest neighborhoods\n• Estimate property values\n\nTry asking: 'Show me 3-bedroom houses under $400k'"
-        }
-      ]);
+  // ✅ FIXED: Use the correct API URL
+  const API_URL = import.meta.env.VITE_API_URL;
+  
+  // ✅ Add axios default configuration
+  const apiClient = axios.create({
+    baseURL: API_URL,
+    timeout: 30000, // 30 seconds timeout (Render free tier needs time to wake up)
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     }
-  }, [isOpen]);
+  });
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // ✅ Add interceptors for debugging
+  apiClient.interceptors.request.use(request => {
+    console.log('🌐 API Request:', {
+      url: request.url,
+      method: request.method,
+      data: request.data,
+      headers: request.headers
+    });
+    return request;
+  });
 
-  // Send message to API
+  apiClient.interceptors.response.use(
+    response => {
+      console.log('✅ API Response:', response.status, response.data);
+      return response;
+    },
+    error => {
+      console.error('❌ API Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config
+      });
+      return Promise.reject(error);
+    }
+  );
+
+  // ... (keep your existing state and useEffect hooks)
+
+  // ✅ FIXED: Updated sendMessage function
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -45,8 +66,8 @@ const ChatbotWidget = () => {
     ]);
 
     try {
-      // Call your Flask API
-      const response = await axios.post(`${API_URL}/api/chat/semantic`, {
+      // ✅ FIXED: Use apiClient instead of direct axios
+      const response = await apiClient.post('/api/chat/semantic', {
         message: userMessage
       });
 
@@ -56,24 +77,47 @@ const ChatbotWidget = () => {
         {
           id: Date.now() + 1,
           sender: 'bot',
-          text: response.data.response,
+          text: response.data.response || "I found some properties for you!",
           properties: response.data.properties || []
         }
       ]);
     } catch (error) {
       console.error('Chat error:', error);
+      
+      // ✅ Better error handling with specific messages
+      let errorMessage = "😅 Sorry, I'm having trouble connecting.";
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = "⏰ The server took too long to respond. Please try again in a moment.";
+      } else if (error.response) {
+        if (error.response.status === 503) {
+          errorMessage = "🔄 The AI models are loading. Please wait a moment and try again.";
+        } else if (error.response.status === 404) {
+          errorMessage = "🔍 The API endpoint wasn't found. Please check the URL.";
+        } else if (error.response.status === 500) {
+          errorMessage = "💥 Server error. Please try again later.";
+        } else {
+          errorMessage = `😅 Error: ${error.response.data?.error || error.response.statusText || 'Unknown error'}`;
+        }
+      } else if (error.request) {
+        errorMessage = "🌐 Cannot reach the server. Please check if the API is running.";
+      }
+      
       setMessages(prev => [
         ...prev,
         {
           id: Date.now() + 1,
           sender: 'bot',
-          text: "😅 Sorry, I'm having trouble connecting. Please make sure the API is running on http://localhost:5000"
+          text: errorMessage
         }
       ]);
     }
 
     setIsLoading(false);
   };
+
+  // ... (rest of your component code remains the same)
+
 
   // Handle Enter key press
   const handleKeyPress = (e) => {
