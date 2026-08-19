@@ -1,8 +1,10 @@
+// App.jsx
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import Chatbot from './components/Chatbot';  // ← Import the widget
 
 import Home from './pages/Home';
 import Listings from './pages/Listings';
@@ -13,7 +15,6 @@ import TenantDashboard from './pages/TenantDashboard';
 import LandlordDashboard from './pages/LandlordDashboard';
 import AddListing from './pages/AddListing';
 import HousingMap from './pages/HousingMap';
-import Chatbot from './components/Chatbot';  // ← Keep this import
 
 function App() {
   return (
@@ -21,7 +22,6 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        {/* Remove this route: <Route path="/MlChatbot" element={<Chatbot/>} /> */}
         <Route path="/HousingMap" element={<HousingMap />} />
         <Route path="/listings" element={<Listings />} />
         <Route path="/listings/:id" element={<ListingDetail />} />
@@ -53,8 +53,8 @@ function App() {
         />
       </Routes>
       
-      {/* CHATBOT WIDGET - Shows on every page */}
-      <Chatbot />  {/* ← Add this here */}
+      {/* ✅ CHATBOT WIDGET - Shows on EVERY page */}
+      <Chatbot />
       
       <Footer />
     </AuthProvider>
