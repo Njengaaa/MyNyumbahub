@@ -10,7 +10,7 @@ const ChatbotWidget = () => {
   const messagesEndRef = useRef(null);
 
   // API URL - change this to your deployed API URL later
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://chatbot-1-2g9x.onrender.com';
 
   // Welcome message when chat opens
   useEffect(() => {
