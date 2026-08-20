@@ -276,7 +276,7 @@ const ChatbotWidget = () => {
         flexShrink: 0
       }}>
         {[
-          "3-bed under $400k",
+          "3-bed under KES 400k",
           "Family-friendly",
           "Investment tips",
           "SF budget"
