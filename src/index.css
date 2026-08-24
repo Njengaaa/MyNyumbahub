@@ -1,21 +1,27 @@
 :root {
-  --font-display: 'Manrope', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  /* Savanna Green design system */
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Montserrat', system-ui, sans-serif;
 
-  --bg: #f6f5f1;
+  --bg: #f3f5ef;
   --surface: #ffffff;
-  --ink: #14181b;
-  --ink-soft: #5c6570;
-  --border: #e6e4de;
+  --ink: #16201a;
+  --ink-soft: #5f6b62;
+  --border: #e3e8de;
 
-  /* Tenant-facing accent: deep teal */
-  --accent: #1f6f5c;
+  /* Tenant-facing / primary accent: Savanna Green */
+  --accent: #1f6d3c;
+  --accent-dark: #164f2c;
   --accent-ink: #ffffff;
-  --accent-soft: #e3f0ec;
+  --accent-soft: #e6f0e8;
 
-  /* Landlord-facing accent: warm amber */
-  --gold: #c8792f;
-  --gold-soft: #faeee0;
+  /* Landlord-facing accent: warm clay (kept for role distinction) */
+  --gold: #b8802e;
+  --gold-soft: #f6ecdb;
+
+  /* Info accent: used for verified badges, market-insight callouts */
+  --info: #2f6fed;
+  --info-soft: #e8f0fe;
 
   --danger: #c0392b;
   --danger-soft: #fbe9e7;
