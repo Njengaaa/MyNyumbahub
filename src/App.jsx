@@ -1,10 +1,11 @@
 // App.jsx
-import { Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
-import Chatbot from './components/Chatbot';  // ← Import the widget
+import Chatbot from './components/Chatbot';
 
 import Home from './pages/Home';
 import Listings from './pages/Listings';
@@ -16,13 +17,28 @@ import LandlordDashboard from './pages/LandlordDashboard';
 import AddListing from './pages/AddListing';
 import HousingMap from './pages/HousingMap';
 
-function App() {
+function AppContent() {
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const navigate = useNavigate();
+
+  // Handler passed to ChatbotWidget
+  const handleSelectProperty = (property) => {
+    setSelectedProperty(property);
+    // Automatically redirect to the map route if not already there
+    if (window.location.pathname !== '/HousingMap') {
+      navigate('/HousingMap');
+    }
+  };
+
   return (
-    <AuthProvider>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/HousingMap" element={<HousingMap />} />
+        <Route 
+          path="/HousingMap" 
+          element={<HousingMap selectedProperty={selectedProperty} />} 
+        />
         <Route path="/listings" element={<Listings />} />
         <Route path="/listings/:id" element={<ListingDetail />} />
         <Route path="/login" element={<Login />} />
@@ -53,10 +69,18 @@ function App() {
         />
       </Routes>
       
-      {/* ✅ CHATBOT WIDGET - Shows on EVERY page */}
-      <Chatbot />
+      {/* Global Chatbot receives the selection callback */}
+      <Chatbot onSelectProperty={handleSelectProperty} />
       
       <Footer />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 }
