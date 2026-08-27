@@ -24,6 +24,18 @@ const ChatbotWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  // Helper function to render **bold** markdown tags cleanly
+  const renderFormattedText = (text) => {
+    if (!text) return null;
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, idx) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={idx}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   const sendMessage = async (textToSend) => {
     const messageText = (textToSend !== undefined ? textToSend : input).trim();
     if (!messageText || isLoading) return;
@@ -36,21 +48,30 @@ const ChatbotWidget = () => {
       { id: Date.now(), sender: 'user', text: messageText }
     ]);
 
+    // Set artificial delay duration in milliseconds (3000ms = 3s, 5000ms = 5s)
+    const MINIMUM_LOADING_TIME = 3000;
+    const delayTimer = new Promise(resolve => setTimeout(resolve, MINIMUM_LOADING_TIME));
+
     try {
-      const response = await apiClient.post('/api/chat/semantic', {
-        message: messageText
-      });
+      // Execute the API request and minimum timer concurrently
+      const [response] = await Promise.all([
+        apiClient.post('/api/chat/semantic', { message: messageText }),
+        delayTimer
+      ]);
 
       setMessages(prev => [
         ...prev,
         {
           id: Date.now() + 1,
           sender: 'bot',
-          text: response.data.response || "Here are some properties that match your request:",
-          properties: response.data.properties || []
+          text: response.data.text || response.data.response || "Here are some properties that match your request:",
+          properties: response.data.structured?.properties || response.data.properties || []
         }
       ]);
     } catch (error) {
+      // Ensure the error state also respects the minimum loading delay
+      await delayTimer;
+
       setMessages(prev => [
         ...prev,
         {
@@ -242,13 +263,14 @@ const ChatbotWidget = () => {
                     fontSize: '14px',
                     lineHeight: '1.5',
                     wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap', /* Formats newline breaks from ResponseFormatter */
                     marginBottom: msg.properties?.length ? '8px' : '0'
                   }}>
-                    {msg.text}
+                    {renderFormattedText(msg.text)}
                   </div>
                 )}
 
-                {/* Property Cards with Hover Effect */}
+                {/* Property Cards */}
                 {msg.properties && msg.properties.length > 0 && (
                   <div style={{
                     display: 'flex',
@@ -274,15 +296,21 @@ const ChatbotWidget = () => {
                         }}
                       >
                         {property.image_url && (
-                          <img src={property.image_url} alt={property.title} style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
+                          <img src={property.image_url} alt={property.title || property.address} style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
                         )}
                         <div style={{ padding: '10px' }}>
                           <div style={{ fontSize: '13px', fontWeight: '600', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {property.title || 'Property'}
+                            {property.address || property.title || 'Property Listing'}
                           </div>
                           <div style={{ fontSize: '13px', fontWeight: '700', color: '#2563EB', margin: '4px 0' }}>
                             {property.price ? `KES ${Number(property.price).toLocaleString()}` : 'Price on Request'}
                           </div>
+                          {(property.bedrooms || property.sqft) && (
+                            <div style={{ fontSize: '11px', color: '#64748B', display: 'flex', gap: '6px' }}>
+                              {property.bedrooms && <span>🛏️ {property.bedrooms} beds</span>}
+                              {property.sqft && <span>📐 {property.sqft.toLocaleString()} sqft</span>}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -291,7 +319,7 @@ const ChatbotWidget = () => {
               </div>
             ))}
 
-            {/* Loading State: Typing Dots + Property Skeleton Cards */}
+            {/* Loading State: Typing Dots + Property Skeleton Cards (RESTORED) */}
             {isLoading && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
                 <div style={{
@@ -332,7 +360,7 @@ const ChatbotWidget = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Suggestions */}
+          {/* Quick Suggestions Bar */}
           <div style={{
             padding: '8px 12px',
             display: 'flex',
