@@ -65,3 +65,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+.listing-type-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.listing-type-toggle button {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.listing-type-toggle button.active {
+  background: var(--gold);
+  color: #fff;
+  border-color: var(--gold);
+}

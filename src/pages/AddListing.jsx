@@ -9,9 +9,11 @@ function AddListing() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [listingType, setListingType] = useState('rent'); // 'rent' | 'sale'
   const [title, setTitle] = useState('');
   const [area, setArea] = useState(AREA_NAMES[0]);
   const [rentAmount, setRentAmount] = useState('');
+  const [salePrice, setSalePrice] = useState('');
   const [bedrooms, setBedrooms] = useState(1);
   const [bathrooms, setBathrooms] = useState(1);
   const [description, setDescription] = useState('');
@@ -33,7 +35,9 @@ function AddListing() {
       city: coords.city,
       lat: coords.lat,
       lng: coords.lng,
-      rent_amount: Number(rentAmount),
+      listing_type: listingType,
+      rent_amount: listingType === 'rent' ? Number(rentAmount) : null,
+      sale_price: listingType === 'sale' ? Number(salePrice) : null,
       bedrooms: Number(bedrooms),
       bathrooms: Number(bathrooms),
       description,
@@ -60,6 +64,26 @@ function AddListing() {
 
       <form onSubmit={handleSubmit} className="add-listing-form">
         <div className="form-field">
+          <label>Listing type</label>
+          <div className="listing-type-toggle">
+            <button
+              type="button"
+              className={listingType === 'rent' ? 'active' : ''}
+              onClick={() => setListingType('rent')}
+            >
+              For Rent
+            </button>
+            <button
+              type="button"
+              className={listingType === 'sale' ? 'active' : ''}
+              onClick={() => setListingType('sale')}
+            >
+              For Sale
+            </button>
+          </div>
+        </div>
+
+        <div className="form-field">
           <label htmlFor="title">Title</label>
           <input
             id="title"
@@ -82,17 +106,31 @@ function AddListing() {
               ))}
             </select>
           </div>
-          <div className="form-field">
-            <label htmlFor="rent">Rent (KES/month)</label>
-            <input
-              id="rent"
-              type="number"
-              value={rentAmount}
-              onChange={(e) => setRentAmount(e.target.value)}
-              required
-              min="0"
-            />
-          </div>
+          {listingType === 'rent' ? (
+            <div className="form-field">
+              <label htmlFor="rent">Rent (KES/month)</label>
+              <input
+                id="rent"
+                type="number"
+                value={rentAmount}
+                onChange={(e) => setRentAmount(e.target.value)}
+                required
+                min="0"
+              />
+            </div>
+          ) : (
+            <div className="form-field">
+              <label htmlFor="salePrice">Sale price (KES)</label>
+              <input
+                id="salePrice"
+                type="number"
+                value={salePrice}
+                onChange={(e) => setSalePrice(e.target.value)}
+                required
+                min="0"
+              />
+            </div>
+          )}
         </div>
 
         <div className="form-row">

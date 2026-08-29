@@ -117,3 +117,18 @@
   background: var(--danger-soft);
   color: var(--danger);
 }
+
+.status-new {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.status-responded {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.status-closed {
+  background: var(--border);
+  color: var(--ink-soft);
+}

@@ -6,21 +6,21 @@ import './Dashboard.css';
 
 function TenantDashboard() {
   const { user, profile } = useAuth();
-  const [bookings, setBookings] = useState([]);
+  const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadBookings() {
+    async function loadInquiries() {
       const { data, error } = await supabase
-        .from('bookings')
-        .select('id, status, created_at, listings ( id, title, area, city, rent_amount )')
+        .from('inquiries')
+        .select('id, message, status, created_at, listings ( id, title, area, city, listing_type, rent_amount, sale_price )')
         .eq('tenant_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (!error) setBookings(data || []);
+      if (!error) setInquiries(data || []);
       setLoading(false);
     }
-    if (user) loadBookings();
+    if (user) loadInquiries();
   }, [user]);
 
   return (
@@ -29,7 +29,7 @@ function TenantDashboard() {
         <div>
           <span className="badge badge-tenant">Tenant</span>
           <h1>Welcome back{profile?.full_name ? `, ${profile.full_name}` : ''}</h1>
-          <p>Track your booking requests and discover new homes.</p>
+          <p>Track the listings you&rsquo;ve reached out about and discover new homes.</p>
         </div>
         <Link to="/listings" className="btn btn-accent">
           Browse listings
@@ -37,27 +37,33 @@ function TenantDashboard() {
       </div>
 
       <section className="dashboard-section">
-        <h2>My Booking Requests</h2>
+        <h2>My Inquiries</h2>
         {loading ? (
           <div className="empty-state">Loading…</div>
-        ) : bookings.length === 0 ? (
+        ) : inquiries.length === 0 ? (
           <div className="empty-state">
-            No booking requests yet. <Link to="/listings">Browse listings</Link> to get started.
+            No inquiries yet. <Link to="/listings">Browse listings</Link> and contact a landlord to get started.
           </div>
         ) : (
           <div className="booking-list">
-            {bookings.map((b) => (
-              <div key={b.id} className="booking-row">
-                <div>
-                  <p className="booking-row-title">{b.listings?.title}</p>
-                  <p className="booking-row-sub">
-                    {b.listings?.area}, {b.listings?.city} · KES{' '}
-                    {b.listings?.rent_amount?.toLocaleString()}/mo
-                  </p>
+            {inquiries.map((inq) => {
+              const listing = inq.listings;
+              const price =
+                listing?.listing_type === 'sale'
+                  ? `KES ${listing?.sale_price?.toLocaleString()}`
+                  : `KES ${listing?.rent_amount?.toLocaleString()}/mo`;
+              return (
+                <div key={inq.id} className="booking-row">
+                  <div>
+                    <p className="booking-row-title">{listing?.title}</p>
+                    <p className="booking-row-sub">
+                      {listing?.area}, {listing?.city} · {price}
+                    </p>
+                  </div>
+                  <span className={`status-pill status-${inq.status}`}>{inq.status}</span>
                 </div>
-                <span className={`status-pill status-${b.status}`}>{b.status}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
