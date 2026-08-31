@@ -4,17 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MAP_CENTER, MAP_ZOOM } from '../areaCoords';
 import './ListingsMap.css';
-import { HousingMap } from '../components/HousingMap'
 
-export function Home() {
-    return (
-        <div>
-            <h1 className="text-3xl font-bold mb-6">Nairobi Housing Market</h1>
-            <p className="text-gray-600 mb-6">Explore properties across Nairobi and surrounding areas</p>
-            <HousingMap />
-        </div>
-    )
-}
 // Leaflet's default marker icons don't resolve correctly under Vite's bundler,
 // so we rebuild the icon from the CDN-hosted images.
 const markerIcon = new L.Icon({
@@ -50,7 +40,11 @@ function ListingsMap({ listings }) {
                 <span>
                   {listing.area}, {listing.city}
                 </span>
-                <span>KES {listing.rent_amount.toLocaleString()}/mo</span>
+                <span>
+                  {listing.listing_type === 'sale'
+                    ? `KES ${listing.sale_price != null ? listing.sale_price.toLocaleString() : '—'}`
+                    : `KES ${listing.rent_amount != null ? listing.rent_amount.toLocaleString() : '—'}/mo`}
+                </span>
                 <Link to={`/listings/${listing.id}`}>View details →</Link>
               </div>
             </Popup>
