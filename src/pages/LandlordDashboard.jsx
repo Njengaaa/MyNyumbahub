@@ -7,7 +7,7 @@ import './Dashboard.css';
 function LandlordDashboard() {
   const { user, profile } = useAuth();
   const [listings, setListings] = useState([]);
-  const [bookings, setBookings] = useState([]);
+  const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,12 +20,14 @@ function LandlordDashboard() {
 
       setListings(myListings || []);
 
-      const { data: myBookings } = await supabase
-        .from('bookings')
-        .select('id, status, created_at, listings ( id, title ), profiles ( full_name )')
+      const { data: myInquiries } = await supabase
+        .from('inquiries')
+        .select('id, message, status, created_at, listings ( id, title, landlord_id ), profiles ( full_name )')
         .order('created_at', { ascending: false });
 
-      setBookings(myBookings || []);
+      // RLS ("Landlords can view inquiries on their listings") already scopes
+      // this to the current landlord's own listings, so no client-side filter needed.
+      setInquiries(myInquiries || []);
       setLoading(false);
     }
     if (user) loadData();
@@ -37,10 +39,10 @@ function LandlordDashboard() {
     if (!error) setListings((prev) => prev.filter((l) => l.id !== listingId));
   };
 
-  const updateBookingStatus = async (bookingId, status) => {
-    const { error } = await supabase.from('bookings').update({ status }).eq('id', bookingId);
+  const updateInquiryStatus = async (inquiryId, status) => {
+    const { error } = await supabase.from('inquiries').update({ status }).eq('id', inquiryId);
     if (!error) {
-      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status } : b)));
+      setInquiries((prev) => prev.map((i) => (i.id === inquiryId ? { ...i, status } : i)));
     }
   };
 
@@ -50,7 +52,7 @@ function LandlordDashboard() {
         <div>
           <span className="badge badge-landlord">Landlord</span>
           <h1>Welcome back{profile?.full_name ? `, ${profile.full_name}` : ''}</h1>
-          <p>Manage your listings and respond to booking requests.</p>
+          <p>Manage your listings and respond to inquiries.</p>
         </div>
         <Link to="/dashboard/landlord/new" className="btn btn-gold">
           + Add listing
@@ -73,7 +75,10 @@ function LandlordDashboard() {
                 <div>
                   <p className="booking-row-title">{l.title}</p>
                   <p className="booking-row-sub">
-                    {l.area}, {l.city} · KES {l.rent_amount.toLocaleString()}/mo
+                    {l.area}, {l.city} ·{' '}
+                    {l.listing_type === 'sale'
+                      ? `KES ${l.sale_price?.toLocaleString()}`
+                      : `KES ${l.rent_amount?.toLocaleString()}/mo`}
                   </p>
                 </div>
                 <div className="landlord-listing-actions">
@@ -91,38 +96,40 @@ function LandlordDashboard() {
       </section>
 
       <section className="dashboard-section">
-        <h2>Booking Requests</h2>
+        <h2>Inquiries Received</h2>
         {loading ? (
           <div className="empty-state">Loading…</div>
-        ) : bookings.length === 0 ? (
-          <div className="empty-state">No booking requests yet.</div>
+        ) : inquiries.length === 0 ? (
+          <div className="empty-state">No inquiries yet.</div>
         ) : (
           <div className="booking-list">
-            {bookings.map((b) => (
-              <div key={b.id} className="booking-row">
+            {inquiries.map((inq) => (
+              <div key={inq.id} className="booking-row">
                 <div>
-                  <p className="booking-row-title">{b.listings?.title}</p>
-                  <p className="booking-row-sub">Requested by {b.profiles?.full_name || 'a tenant'}</p>
+                  <p className="booking-row-title">{inq.listings?.title}</p>
+                  <p className="booking-row-sub">
+                    From {inq.profiles?.full_name || 'a visitor'} — &ldquo;{inq.message}&rdquo;
+                  </p>
                 </div>
-                {b.status === 'pending' ? (
+                {inq.status === 'new' ? (
                   <div className="booking-row-actions">
                     <button
                       type="button"
                       className="btn btn-accent btn-sm"
-                      onClick={() => updateBookingStatus(b.id, 'confirmed')}
+                      onClick={() => updateInquiryStatus(inq.id, 'responded')}
                     >
-                      Confirm
+                      Mark responded
                     </button>
                     <button
                       type="button"
                       className="btn btn-outline btn-sm"
-                      onClick={() => updateBookingStatus(b.id, 'cancelled')}
+                      onClick={() => updateInquiryStatus(inq.id, 'closed')}
                     >
-                      Decline
+                      Close
                     </button>
                   </div>
                 ) : (
-                  <span className={`status-pill status-${b.status}`}>{b.status}</span>
+                  <span className={`status-pill status-${inq.status}`}>{inq.status}</span>
                 )}
               </div>
             ))}

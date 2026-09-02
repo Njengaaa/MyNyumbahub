@@ -35,8 +35,6 @@ function ListingDetail() {
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
-  const [booking, setBooking] = useState(false);
-  const [message, setMessage] = useState('');
 
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [sendingInquiry, setSendingInquiry] = useState(false);
@@ -80,44 +78,24 @@ function ListingDetail() {
     setInquiryStatus('');
     const { error } = await supabase.from('inquiries').insert({
       listing_id: listing.id,
-      name: profile?.full_name || 'Nyumbahub tenant',
-      email: user.email,
-      message: inquiryMessage.trim() || null,
+      tenant_id: user.id,
+      message: inquiryMessage.trim() || 'I am interested in this property. Please get in touch.',
     });
     if (error) {
       setInquiryStatus(`Could not send message: ${error.message}`);
     } else {
-      setInquiryStatus('Message sent — the landlord will reach out by email.');
+      setInquiryStatus('Message sent — the landlord will reach out.');
       setInquiryMessage('');
     }
     setSendingInquiry(false);
-  };
-
-  const handleRequestBooking = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    setBooking(true);
-    setMessage('');
-    const { error } = await supabase.from('bookings').insert({
-      listing_id: listing.id,
-      tenant_id: user.id,
-    });
-    if (error) {
-      setMessage(`Could not send request: ${error.message}`);
-    } else {
-      setMessage('Request sent. Track its status from your dashboard.');
-    }
-    setBooking(false);
   };
 
   if (loading) return <div className="route-loading">Loading…</div>;
   if (!listing) return <div className="route-loading">Listing not found.</div>;
 
   const images = listing.images?.length ? listing.images : [];
-  const mainImage = images[activeImage];
-  const thumbSlots = [1, 2, 3, 4].map((i) => images[i] || images[0]);
+  const mainImage = images[activeImage] || images[0];
+  const hasMultipleImages = images.length > 1;
 
   return (
     <div className="listing-detail container">
@@ -125,27 +103,29 @@ function ListingDetail() {
         ← Back to listings
       </Link>
 
-      <div className="ld-gallery">
+      <div className={`ld-gallery ${hasMultipleImages ? '' : 'ld-gallery-single'}`}>
         <div className="ld-gallery-main">
           {mainImage ? <img src={mainImage} alt={listing.title} /> : <div className="ld-image-placeholder" />}
           {listing.verified !== false && <span className="ld-verified-badge">✓ Verified</span>}
         </div>
-        <div className="ld-gallery-grid">
-          {thumbSlots.map((src, i) =>
-            src ? (
-              <button
-                key={i}
-                type="button"
-                className={`ld-thumb ${i + 1 === activeImage ? 'active' : ''}`}
-                onClick={() => setActiveImage(i + 1)}
-              >
-                <img src={src} alt={`${listing.title} ${i + 2}`} />
-              </button>
-            ) : (
-              <div key={i} className="ld-thumb ld-image-placeholder" />
-            )
-          )}
-        </div>
+
+        {hasMultipleImages && (
+          <div className="ld-gallery-grid">
+            {images.slice(1, 5).map((src, i) => {
+              const imageIndex = i + 1;
+              return (
+                <button
+                  key={src}
+                  type="button"
+                  className={`ld-thumb ${imageIndex === activeImage ? 'active' : ''}`}
+                  onClick={() => setActiveImage(imageIndex)}
+                >
+                  <img src={src} alt={`${listing.title} ${imageIndex + 1}`} />
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="ld-body">
@@ -201,20 +181,14 @@ function ListingDetail() {
 
         <aside className="ld-sidebar">
           <div className="ld-price-card">
-            <span className="ld-price-label">Property Price</span>
-            <span className="ld-price">KES {listing.rent_amount.toLocaleString()}/mo</span>
-
-            {profile?.role !== 'landlord' && (
-              <button
-                type="button"
-                className="btn btn-outline btn-full ld-book-btn"
-                onClick={handleRequestBooking}
-                disabled={booking}
-              >
-                {booking ? 'Sending…' : user ? 'Request to Book' : 'Sign in to book'}
-              </button>
-            )}
-            {message && <p className="ld-message">{message}</p>}
+            <span className="ld-price-label">
+              {listing.listing_type === 'sale' ? 'Sale Price' : 'Property Price'}
+            </span>
+            <span className="ld-price">
+              {listing.listing_type === 'sale'
+                ? `KES ${listing.sale_price != null ? listing.sale_price.toLocaleString() : '—'}`
+                : `KES ${listing.rent_amount != null ? listing.rent_amount.toLocaleString() : '—'}/mo`}
+            </span>
           </div>
 
           <div className="ld-contact-card">

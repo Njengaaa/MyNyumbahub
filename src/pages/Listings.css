@@ -17,6 +17,34 @@
   text-decoration: none;
 }
 
+/* Listing type toggle (All / For Rent / For Sale) */
+.listing-type-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.listing-type-toggle button {
+  border: none;
+  background: var(--surface);
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  border-right: 1px solid var(--border);
+}
+
+.listing-type-toggle button:last-child {
+  border-right: none;
+}
+
+.listing-type-toggle button.active {
+  background: var(--ink);
+  color: #fff;
+}
+
 .listings-header {
   display: flex;
   align-items: flex-end;
@@ -268,10 +296,19 @@
   background: linear-gradient(135deg, #e3e8de, #cfd6c6);
 }
 
-.lg-badge {
+/* Badge stack — groups the type tag with Featured/Verified so they
+   stack vertically instead of overlapping at the same top-left position. */
+.lg-badge-stack {
   position: absolute;
   top: 12px;
   left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.lg-badge {
   font-size: 11px;
   font-weight: 700;
   padding: 5px 10px;
@@ -279,11 +316,23 @@
   color: #fff;
 }
 
+.lg-badge-stack .lg-badge {
+  position: static;
+}
+
 .lg-badge-verified {
   background: var(--info);
 }
 
 .lg-badge-featured {
+  background: var(--accent);
+}
+
+.lg-badge-sale {
+  background: var(--gold);
+}
+
+.lg-badge-rent {
   background: var(--accent);
 }
 
@@ -385,3 +434,4 @@
     grid-template-columns: 1fr;
   }
 }
+
