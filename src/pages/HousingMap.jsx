@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
-import { SupabaseHousing } from '../SupabaseHousing'
+import { supabase } from '../supabaseClient'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -16,29 +16,25 @@ L.Icon.Default.mergeOptions({
 function MapCenter({ markers, selectedProperty, markerRefs }) {
   const map = useMap()
 
-  // Handles auto-fit bounds on initial data load
   useEffect(() => {
     if (!selectedProperty && markers && markers.length > 0) {
-      const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lon]))
+      const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng]))
       map.fitBounds(bounds, { padding: [50, 50] })
     }
   }, [markers, selectedProperty, map])
 
-  // Handles flying to selected property and opening popup
   useEffect(() => {
-    if (selectedProperty?.lat && selectedProperty?.lon) {
+    if (selectedProperty?.lat && selectedProperty?.lng) {
       const lat = Number(selectedProperty.lat)
-      const lng = Number(selectedProperty.lon)
+      const lng = Number(selectedProperty.lng)
 
       map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 })
 
       const markerKey = selectedProperty.id || `${lat}-${lng}`
       const targetMarker = markerRefs.current[markerKey]
 
-      let timeoutId = null 
-      
       if (targetMarker) {
-       timeoutId = setTimeout(() => {
+        setTimeout(() => {
           targetMarker.openPopup()
         }, 1200)
       }
@@ -48,17 +44,34 @@ function MapCenter({ markers, selectedProperty, markerRefs }) {
   return null
 }
 
-// Color mapping for price categories
-const getMarkerColor = (price) => {
-  if (!price) return '#666666'
-  if (price > 50000000) return '#8B0000'
-  if (price > 20000000) return '#DC143C'
-  if (price > 10000000) return '#FF8C00'
-  if (price > 5000000) return '#228B22'
+// Display price: sale listings use sale_price, rent listings use rent_amount.
+// Guards against the null-crash pattern (rent_amount is null on sale rows).
+function getDisplayPrice(listing) {
+  if (listing.listing_type === 'sale') return listing.sale_price ?? null
+  return listing.rent_amount ?? null
+}
+
+// Color thresholds differ for sale (KES, millions) vs rent (KES/month, thousands)
+function getMarkerColor(listing) {
+  const price = getDisplayPrice(listing)
+  if (price == null) return '#666666'
+
+  if (listing.listing_type === 'sale') {
+    if (price > 50000000) return '#8B0000'
+    if (price > 20000000) return '#DC143C'
+    if (price > 10000000) return '#FF8C00'
+    if (price > 5000000) return '#228B22'
+    return '#4169E1'
+  }
+
+  // rent
+  if (price > 200000) return '#8B0000'
+  if (price > 100000) return '#DC143C'
+  if (price > 50000) return '#FF8C00'
+  if (price > 20000) return '#228B22'
   return '#4169E1'
 }
 
-// Custom marker with color
 function createColoredMarker(color) {
   return L.divIcon({
     className: 'custom-marker',
@@ -70,12 +83,11 @@ function createColoredMarker(color) {
 }
 
 export default function HousingMapPage({ selectedProperty }) {
-  const [properties, setProperties] = useState([])
+  const [listings, setListings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [totalCount, setTotalCount] = useState(0)
-  
-  // Ref map to store Leaflet marker instances by property key/ID
+
   const markerRefs = useRef({})
 
   // Filter states
@@ -84,73 +96,77 @@ export default function HousingMapPage({ selectedProperty }) {
   const [maxPrice, setMaxPrice] = useState('')
   const [selectedBedrooms, setSelectedBedrooms] = useState('')
   const [selectedTypes, setSelectedTypes] = useState([])
+  const [listingKind, setListingKind] = useState('all') // 'all' | 'rent' | 'sale'
 
   useEffect(() => {
-    fetchProperties()
+    fetchListings()
   }, [])
 
-  const fetchProperties = async () => {
+  const fetchListings = async () => {
     try {
       setLoading(true)
       setError(null)
-      
-      const { data, error, count } = await SupabaseHousing
-        .from('properties')
+
+      const { data, error, count } = await supabase
+        .from('listings')
         .select('*', { count: 'exact' })
         .not('lat', 'is', null)
-        .not('lon', 'is', null)
+        .not('lng', 'is', null)
         .limit(500)
-      
+
       if (error) throw error
-      setProperties(data || [])
+      setListings(data || [])
       setTotalCount(count || 0)
     } catch (err) {
-      console.error('Error fetching properties:', err)
+      console.error('Error fetching listings:', err)
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  // Filter properties
-  const filteredProperties = useMemo(() => {
-    return properties.filter(prop => {
+  const filteredListings = useMemo(() => {
+    return listings.filter(listing => {
+      if (listingKind !== 'all' && listing.listing_type !== listingKind) return false
+
       if (searchTerm) {
         const search = searchTerm.toLowerCase()
-        const matchesSearch = 
-          prop.title?.toLowerCase().includes(search) ||
-          prop.location?.toLowerCase().includes(search)
+        const matchesSearch =
+          listing.title?.toLowerCase().includes(search) ||
+          listing.area?.toLowerCase().includes(search) ||
+          listing.city?.toLowerCase().includes(search)
         if (!matchesSearch) return false
       }
-      
-      if (minPrice && prop.price < Number(minPrice)) return false
-      if (maxPrice && prop.price > Number(maxPrice)) return false
-      if (selectedBedrooms && prop.bedrooms !== Number(selectedBedrooms)) return false
-      if (selectedTypes.length > 0 && !selectedTypes.includes(prop.property_type)) return false
-      
+
+      const price = getDisplayPrice(listing)
+      if (minPrice && (price == null || price < Number(minPrice))) return false
+      if (maxPrice && (price == null || price > Number(maxPrice))) return false
+      if (selectedBedrooms && listing.bedrooms !== Number(selectedBedrooms)) return false
+      if (selectedTypes.length > 0 && !selectedTypes.includes(listing.property_type)) return false
+
       return true
     })
-  }, [properties, searchTerm, minPrice, maxPrice, selectedBedrooms, selectedTypes])
+  }, [listings, searchTerm, minPrice, maxPrice, selectedBedrooms, selectedTypes, listingKind])
 
   const propertyTypes = useMemo(() => {
     const types = new Set()
-    properties.forEach(p => {
-      if (p.property_type) types.add(p.property_type)
+    listings.forEach(l => {
+      if (l.property_type) types.add(l.property_type)
     })
     return Array.from(types)
-  }, [properties])
+  }, [listings])
 
   const bedroomOptions = useMemo(() => {
     const counts = new Set()
-    properties.forEach(p => {
-      if (p.bedrooms) counts.add(p.bedrooms)
+    listings.forEach(l => {
+      if (l.bedrooms) counts.add(l.bedrooms)
     })
     return Array.from(counts).sort((a, b) => a - b)
-  }, [properties])
+  }, [listings])
 
   const handleTypeToggle = (type) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) 
+    setSelectedTypes(prev =>
+      prev.includes(type)
         ? prev.filter(t => t !== type)
         : [...prev, type]
     )
@@ -162,22 +178,23 @@ export default function HousingMapPage({ selectedProperty }) {
     setMaxPrice('')
     setSelectedBedrooms('')
     setSelectedTypes([])
+    setListingKind('all')
   }
 
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            width: '48px', 
-            height: '48px', 
-            border: '4px solid #e0e0e0', 
-            borderTopColor: '#2563eb', 
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #e0e0e0',
+            borderTopColor: '#2563eb',
             borderRadius: '50%',
             animation: 'spin 0.8s linear infinite',
             margin: '0 auto'
           }}></div>
-          <p style={{ marginTop: '1rem' }}>Loading properties...</p>
+          <p style={{ marginTop: '1rem' }}>Loading listings...</p>
         </div>
       </div>
     )
@@ -187,10 +204,10 @@ export default function HousingMapPage({ selectedProperty }) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <div style={{ textAlign: 'center', color: '#dc2626' }}>
-          <h3>Error loading properties</h3>
+          <h3>Error loading listings</h3>
           <p>{error}</p>
-          <button 
-            onClick={fetchProperties}
+          <button
+            onClick={fetchListings}
             style={{
               padding: '0.5rem 1.5rem',
               background: '#2563eb',
@@ -207,10 +224,10 @@ export default function HousingMapPage({ selectedProperty }) {
     )
   }
 
-  const center = selectedProperty?.lat && selectedProperty?.lon 
-    ? [selectedProperty.lat, selectedProperty.lon]
-    : properties.length > 0 
-      ? [properties[0].lat, properties[0].lon]
+  const center = selectedProperty?.lat && selectedProperty?.lng
+    ? [selectedProperty.lat, selectedProperty.lng]
+    : listings.length > 0
+      ? [listings[0].lat, listings[0].lng]
       : [-1.2864, 36.8172]
 
   return (
@@ -241,7 +258,7 @@ export default function HousingMapPage({ selectedProperty }) {
             outline: 'none'
           }}
         />
-        
+
         <input
           type="number"
           placeholder="Min price"
@@ -256,7 +273,7 @@ export default function HousingMapPage({ selectedProperty }) {
             outline: 'none'
           }}
         />
-        
+
         <input
           type="number"
           placeholder="Max price"
@@ -271,7 +288,7 @@ export default function HousingMapPage({ selectedProperty }) {
             outline: 'none'
           }}
         />
-        
+
         <select
           value={selectedBedrooms}
           onChange={(e) => setSelectedBedrooms(e.target.value)}
@@ -290,8 +307,8 @@ export default function HousingMapPage({ selectedProperty }) {
             <option key={b} value={b}>{b} bedroom{b > 1 ? 's' : ''}</option>
           ))}
         </select>
-        
-        <button 
+
+        <button
           onClick={clearFilters}
           style={{
             padding: '0.5rem 1rem',
@@ -307,7 +324,7 @@ export default function HousingMapPage({ selectedProperty }) {
         </button>
       </div>
 
-      {/* Property type filter chips */}
+      {/* Rent/Sale + property type filter chips */}
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
@@ -318,28 +335,51 @@ export default function HousingMapPage({ selectedProperty }) {
         borderBottom: '1px solid #e5e7eb',
         flexShrink: 0
       }}>
-        <span style={{ fontSize: '0.875rem', color: '#6b7280', marginRight: '0.5rem' }}>Property type:</span>
-        {propertyTypes.map(type => (
+        <span style={{ fontSize: '0.875rem', color: '#6b7280', marginRight: '0.5rem' }}>Listing:</span>
+        {['all', 'rent', 'sale'].map(kind => (
           <button
-            key={type}
-            onClick={() => handleTypeToggle(type)}
+            key={kind}
+            onClick={() => setListingKind(kind)}
             style={{
               padding: '0.25rem 0.75rem',
-              border: selectedTypes.includes(type) ? '1px solid #2563eb' : '1px solid #d1d5db',
+              border: listingKind === kind ? '1px solid #2563eb' : '1px solid #d1d5db',
               borderRadius: '9999px',
               fontSize: '0.75rem',
-              background: selectedTypes.includes(type) ? '#2563eb' : 'white',
-              color: selectedTypes.includes(type) ? 'white' : 'inherit',
+              background: listingKind === kind ? '#2563eb' : 'white',
+              color: listingKind === kind ? 'white' : 'inherit',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              textTransform: 'capitalize'
             }}
           >
-            {type}
+            {kind === 'all' ? 'All' : kind === 'rent' ? 'For Rent' : 'For Sale'}
           </button>
         ))}
+
+        {propertyTypes.length > 0 && (
+          <>
+            <span style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0 0.5rem' }}>Property type:</span>
+            {propertyTypes.map(type => (
+              <button
+                key={type}
+                onClick={() => handleTypeToggle(type)}
+                style={{
+                  padding: '0.25rem 0.75rem',
+                  border: selectedTypes.includes(type) ? '1px solid #2563eb' : '1px solid #d1d5db',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  background: selectedTypes.includes(type) ? '#2563eb' : 'white',
+                  color: selectedTypes.includes(type) ? 'white' : 'inherit',
+                  cursor: 'pointer'
+                }}
+              >
+                {type}
+              </button>
+            ))}
+          </>
+        )}
       </div>
 
-      {/* Map Container */}
+      {/* Map */}
       <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
         <MapContainer
           center={center}
@@ -350,42 +390,51 @@ export default function HousingMapPage({ selectedProperty }) {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          
-          {filteredProperties.map(prop => {
-            const color = getMarkerColor(prop.price)
-            const markerKey = prop.id || `${prop.lat}-${prop.lon}`
-            
+
+          {filteredListings.map(listing => {
+            const color = getMarkerColor(listing)
+            const markerKey = listing.id || `${listing.lat}-${listing.lng}`
+            const price = getDisplayPrice(listing)
+
             return (
               <Marker
                 key={markerKey}
                 ref={(ref) => {
                   if (ref) markerRefs.current[markerKey] = ref
                 }}
-                position={[prop.lat, prop.lon]}
+                position={[listing.lat, listing.lng]}
                 icon={createColoredMarker(color)}
               >
                 <Popup>
                   <div style={{ minWidth: '200px', maxWidth: '260px' }}>
-                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', fontWeight: 600 }}>{prop.title}</h4>
-                    <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.75rem', color: '#6b7280' }}>📍 {prop.location}</p>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', fontWeight: 600 }}>{listing.title}</h4>
+                    <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.75rem', color: '#6b7280' }}>
+                      📍 {listing.area}{listing.city ? `, ${listing.city}` : ''}
+                    </p>
                     <p style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', fontWeight: 700, color: '#2563eb' }}>
-                      KSh {prop.price?.toLocaleString()}
+                      {price != null
+                        ? `KSh ${price.toLocaleString()}${listing.listing_type === 'rent' ? '/mo' : ''}`
+                        : 'Price on request'}
                     </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem 0.5rem', fontSize: '0.7rem', color: '#4b5563', marginBottom: '0.5rem' }}>
-                      <span style={{ background: '#f3f4f6', padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>🏠 {prop.bedrooms} beds</span>
-                      <span style={{ background: '#f3f4f6', padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>📐 {prop.sqft} sqft</span>
-                      <span style={{ background: '#f3f4f6', padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>{prop.property_type}</span>
+                      <span style={{ background: '#f3f4f6', padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>🏠 {listing.bedrooms} beds</span>
+                      {listing.size_sqm && (
+                        <span style={{ background: '#f3f4f6', padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>📐 {listing.size_sqm} sqm</span>
+                      )}
+                      {listing.property_type && (
+                        <span style={{ background: '#f3f4f6', padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>{listing.property_type}</span>
+                      )}
                     </div>
                   </div>
                 </Popup>
               </Marker>
             )
           })}
-          
-          <MapCenter 
-            markers={filteredProperties} 
-            selectedProperty={selectedProperty} 
-            markerRefs={markerRefs} 
+
+          <MapCenter
+            markers={filteredListings}
+            selectedProperty={selectedProperty}
+            markerRefs={markerRefs}
           />
         </MapContainer>
       </div>
@@ -394,7 +443,7 @@ export default function HousingMapPage({ selectedProperty }) {
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        justifyComtent: 'center',
+        justifyContent: 'center',
         gap: '1.5rem',
         padding: '0.5rem 1.5rem',
         background: 'white',
@@ -402,13 +451,13 @@ export default function HousingMapPage({ selectedProperty }) {
         flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total Properties</span>
+          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total Listings</span>
           <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>{totalCount}</span>
         </div>
         <span style={{ color: '#d1d5db' }}>|</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Showing</span>
-          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>{filteredProperties.length}</span>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>{filteredListings.length}</span>
         </div>
       </div>
 
@@ -426,17 +475,18 @@ export default function HousingMapPage({ selectedProperty }) {
       }}>
         <h5 style={{ margin: '0 0 0.5rem 0', fontWeight: 600, color: '#374151' }}>Price Category</h5>
         {[
-          { color: '#8B0000', label: 'Ultra-Luxury (>50M)' },
-          { color: '#DC143C', label: 'Luxury (20-50M)' },
-          { color: '#FF8C00', label: 'Mid-Range (10-20M)' },
-          { color: '#228B22', label: 'Affordable (5-10M)' },
-          { color: '#4169E1', label: 'Budget (<5M)' }
+          { color: '#8B0000', label: 'Highest' },
+          { color: '#DC143C', label: 'High' },
+          { color: '#FF8C00', label: 'Mid' },
+          { color: '#228B22', label: 'Affordable' },
+          { color: '#4169E1', label: 'Budget' }
         ].map(item => (
           <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.125rem 0' }}>
             <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: item.color }}></span>
             <span>{item.label}</span>
           </div>
         ))}
+        <p style={{ margin: '0.5rem 0 0', fontSize: '0.65rem', color: '#9ca3af' }}>Scale differs for rent vs. sale</p>
       </div>
 
       <style>{`
